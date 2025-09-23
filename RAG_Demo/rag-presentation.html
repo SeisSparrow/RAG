@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG System Architecture and Implementation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
+        }
+        
+        .presentation-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .slide {
+            width: 90%;
+            max-width: 1200px;
+            height: 85vh;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 60px;
+            overflow-y: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            visibility: hidden;
+            transition: none;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        
+        
+        h1 {
+            color: #1e3c72;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2a5298;
+            padding-bottom: 15px;
+        }
+        
+        h2 {
+            color: #2a5298;
+            font-size: 1.8em;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        
+        h3 {
+            color: #34495e;
+            font-size: 1.4em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        p, li {
+            color: #34495e;
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        ul {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .code-block {
+            background: #f4f4f4;
+            border-left: 4px solid #2a5298;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .code-block code {
+            color: #2c3e50;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .navigation {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-btn {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: #1e3c72;
+        }
+        
+        .nav-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .slide-counter {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .title-slide {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .title-slide h1 {
+            font-size: 3em;
+            margin-bottom: 30px;
+            border: none;
+        }
+        
+        .subtitle {
+            color: #34495e;
+            font-size: 1.5em;
+            margin-bottom: 50px;
+        }
+        
+        .author {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+        
+        .diagram {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .important {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active title-slide">
+            <h1>Retrieval-Augmented Generation (RAG) System</h1>
+            <p class="subtitle">Architecture, Implementation, Deployment and Optimization</p>
+        </div>
+        
+        <!-- Slide 2: Why RAG -->
+        <div class="slide">
+            <h1>Why Use RAG: Problems and Solutions</h1>
+            
+            <h2>Core Challenges in Large Language Models</h2>
+            <ul>
+                <li><strong>Knowledge Cutoff:</strong> LLMs are frozen at training time, lacking access to recent information</li>
+                <li><strong>Hallucination:</strong> Models generate plausible but factually incorrect information</li>
+                <li><strong>Domain Specificity:</strong> General models lack specialized domain knowledge</li>
+                <li><strong>Source Attribution:</strong> Difficulty in tracing information back to authoritative sources</li>
+            </ul>
+            
+            <h2>RAG as a Solution</h2>
+            <p>Retrieval-Augmented Generation addresses these limitations by:</p>
+            <ul>
+                <li>Dynamically retrieving relevant information from external knowledge bases</li>
+                <li>Grounding responses in verifiable source documents</li>
+                <li>Enabling real-time knowledge updates without model retraining</li>
+                <li>Reducing computational costs compared to fine-tuning approaches</li>
+            </ul>
+            
+            <div class="important">
+                <strong>Key Advantage:</strong> RAG combines the generative capabilities of LLMs with the precision of information retrieval systems, creating a more reliable and adaptable AI system.
+            </div>
+        </div>
+        <!-- Slide 3: RAG Architecture -->
+        <div class="slide">
+            <h1>Basic RAG Architecture</h1>
+            
+            <h2>System Components</h2>
+            
+            <div class="diagram">
+                <img src="https://developer-blogs.nvidia.com/wp-content/uploads/2023/12/rag-pipeline-ingest-query-flow-b.png" alt="RAG Pipeline Architecture Diagram" style="max-width:100%; height:auto; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.12); margin: 24px 0;">
+            </div>
+            
+            <h3>Key Components</h3>
+            <ul>
+                <li><strong>Document Store:</strong> Elasticsearch for efficient vector storage and retrieval</li>
+                <li><strong>Embedding Model:</strong> Transforms text into high-dimensional vectors</li>
+                <li><strong>Generator:</strong> LLM that produces responses based on retrieved context</li>
+            </ul>
+        </div>
+        <!-- Slide 4: Embedding Model Explanation -->
+        <div class="slide">
+            <h1>Embedding Model Explained</h1>
+            
+            <h2>What is an Embedding Model?</h2>
+            <p>
+                An <strong>embedding model</strong> transforms text (words, sentences, or documents) into high-dimensional numerical vectors. These vectors capture the semantic meaning of the text, enabling efficient similarity comparison and retrieval.
+            </p>
+            
+            <h2>Why Are Embeddings Important in RAG?</h2>
+            <ul>
+                <li>Enable <strong>semantic search</strong> by representing similar concepts with nearby vectors</li>
+                <li>Allow the retrieval system to find contextually relevant documents, not just keyword matches</li>
+                <li>Serve as the bridge between unstructured text and structured vector databases (like Elasticsearch)</li>
+            </ul>
+            
+            <h2>Common Embedding Models</h2>
+            <ul>
+                <li><strong>BERT</strong> and its variants (e.g., Sentence-BERT, MiniLM)</li>
+                <li><strong>OpenAI Embeddings</strong> (e.g., text-embedding-ada-002)</li>
+                <li><strong>Multilingual Models</strong> for cross-language retrieval</li>
+            </ul>
+            
+            <div class="diagram">
+                <img src="https://miro.medium.com/1*RqJL4Lkd_QLUduD5nQbjUw.png" alt="Text to Embedding Vector Diagram" style="max-width:80%; height:auto; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.12); margin: 24px 0;">
+            </div>
+            
+            <h3>Example: Semantic Similarity in Vector Space</h3>
+            <div class="diagram">
+                <img src="https://weaviate.io/assets/images/image10-ebe747ac9f2e03dba758f1ed3ea7e82c.jpg" alt="Vector space: cat, dog, wolf close together; apple, banana close together" style="max-width:80%; height:auto; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.12); margin: 24px 0;">
+            </div>
+            <p style="margin-top: 12px;">
+                In the embedding space, semantically similar words (like <strong>cat</strong>, <strong>dog</strong>, <strong>wolf</strong>) are mapped close together, while unrelated concepts (like <strong>apple</strong> and <strong>banana</strong>) form their own clusters elsewhere.
+            </p>
+
+        <h2>Cosine Similarity Explained</h2>
+        <div class="diagram">
+            <img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fc8f875a9-67a9-40fd-8689-47edbd31eb01_1444x1027.jpeg" alt="Cosine Similarity Diagram" style="max-width:80%; height:auto; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.12); margin: 24px 0;">
+        </div>
+        <p>
+            <strong>Cosine similarity</strong> measures the angle between two vectors in high-dimensional space. In the context of embeddings, it quantifies how similar two pieces of text are, regardless of their magnitude. A cosine similarity of 1 means the vectors are identical in direction (highly similar), while 0 means they are orthogonal (unrelated).
+        </p>
+        </div>
+        <!-- Slide 4: Elasticsearch Configuration -->
+        <div class="slide">
+            <h1>Elasticsearch Vector Database Configuration</h1>
+            
+            <h2>Local Development Environment Setup</h2>
+            <p>Elasticsearch provides powerful vector search capabilities essential for RAG systems.</p>
+            
+            <h3>Quick Installation Method</h3>
+            <div class="code-block">
+                <code>curl -fsSL https://elastic.co/start-local | sh</code>
+            </div>
+            <h3>Get Elasticsearch Password and API Key</h3>
+            <div class="code-block">
+                <code>cat elastic-start-local/.env | grep ES_LOCAL_PASSWORD</code>
+            </div>
+            <div class="code-block">
+                <code>cat elastic-start-local/.env | grep ES_LOCAL_API_KEY</code>
+            </div>
+            <p>
+                Use the above commands to extract your <strong>Elasticsearch password</strong> and <strong>API key</strong> from the <code>.env</code> file generated by the quickstart script. These credentials are required for secure access to your local Elasticsearch instance.
+            </p>
+            <h3>Configuration Steps</h3>
+            <ul>
+                <li>Execute the one-liner command to deploy Elasticsearch locally</li>
+                <li>Default configuration includes:
+                    <ul>
+                        <li>Port 9200 for REST API</li>
+                        <li>Port 9300 for node communication</li>
+                        <li>Built-in security features enabled</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>List All Indices</h3>
+            <div class="code-block">
+                <code>http://localhost:9200/_cat/indices</code>
+            </div>
+            
+            <h3>Check Content of Index</h3>
+            <div class="code-block">
+                <code>curl -u elastic:&lt;your_password&gt; "http://localhost:9200/test/_search?pretty"</code>
+            </div>
+            <p>
+                This command queries all documents in the <code>test</code> index. Replace <code>&lt;your_password&gt;</code> with your actual Elasticsearch password.
+            </p>
+
+            
+            <p><strong>Reference:</strong> <span class="highlight">https://www.elastic.co/docs/deploy-manage/deploy/self-managed/local-development-installation-quickstart</span></p>
+        </div>
+        
+
+        <!-- Slide 5: PDF Processing and Vector Retrieval -->
+        <div class="slide">
+            <h1>PDF Text Processing</h1>
+            
+            <div class="important">
+                <strong>Tools referenced:</strong>
+                <ul style="margin-top: 10px;">
+                    <li><a href="https://python.langchain.com/docs/how_to/document_loader_pdf/" target="_blank" rel="noopener noreferrer">PyPDFLoader</a>: Load PDF pages into structured documents with metadata.</li>
+                    <li><a href="https://python.langchain.com/docs/how_to/recursive_text_splitter/" target="_blank" rel="noopener noreferrer">RecursiveCharacterTextSplitter</a>: Split documents into context-preserving chunks for embedding.</li>
+                </ul>
+            </div>
+            <h2>Chunking Strategies</h2>
+            <p>
+                Effective chunking is crucial for RAG systems. Different strategies work better for different types of content and use cases.
+            </p>
+            
+            <div class="important">
+                <strong>Reading Material:</strong>
+                <ul style="margin-top: 10px;">
+                    <li><a href="https://masteringllm.medium.com/11-chunking-strategies-for-rag-simplified-visualized-df0dbec8e373" target="_blank" rel="noopener noreferrer">11 Chunking Strategies for RAG - Simplified & Visualized</a>: Comprehensive guide to different chunking approaches with visual examples.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Slide 6: Retrieve and Rerank -->
+        <div class="slide">
+            <h1>Retrieve and Rerank</h1>
+            <h2>Hybrid Search</h2>
+            <ul>
+                <li>Combine <strong>dense (vector)</strong> and <strong>sparse (BM25)</strong> retrieval to balance recall and precision</li>
+                <li>Use vectors for semantic coverage; use BM25 for exact keyword/phrase matches</li>
+            </ul>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="https://miro.medium.com/0*lUCtODvBQ6xJAAhc.png" alt="Hybrid Search Diagram" style="max-width: 80%; border: 1px solid #ccc; border-radius: 8px;">
+            </div>
+            <h3>What Does Hybrid Search Solve?</h3>
+            <p>
+                <strong>Hybrid search</strong> addresses the limitations of using only keyword (sparse) or only vector (dense) retrieval in information retrieval systems:
+            </p>
+            <ul>
+                <li>
+                    <strong>Keyword search</strong> (e.g., BM25) is excellent for exact matches and precise phrase queries, but struggles with synonyms, paraphrases, and semantic similarity.
+                </li>
+                <li>
+                    <strong>Vector search</strong> (dense retrieval) captures semantic meaning and can find relevant results even when the query and document use different words, but may miss exact matches or rare keywords.
+                </li>
+            </ul>
+            <p>
+                <strong>Hybrid search</strong> combines both approaches, leveraging the strengths of each:
+            </p>
+            <ul>
+                <li>
+                    <strong>Keyword search</strong> ensures that highly relevant, exact matches are not missed.
+                </li>
+                <li>
+                    <strong>Vector search</strong> brings in semantically similar results that keyword search alone would overlook.
+                </li>
+                <li>
+                    By <span class="highlight">combining and re-ranking</span> results from both, hybrid search improves both recall (finding more relevant items) and precision (ranking the best items higher).
+                </li>
+            </ul>
+            <p>
+                In practice, hybrid search is especially valuable for <strong>open-domain question answering</strong>, <strong>document retrieval</strong>, and <strong>RAG (Retrieval-Augmented Generation)</strong> systems, where both exact and semantic matches are important for high-quality results.
+            </p>
+
+            <h2>Reranker</h2>
+            <p>
+                After retrieving documents using hybrid search, <strong>reranking</strong> further improves result quality by reordering documents based on their relevance to the query. There are two main approaches:
+            </p>
+            
+            <h3>1. Reciprocal Rank Fusion (RRF)</h3>
+            <p>
+                RRF is an algorithmic approach that combines rankings from multiple retrieval methods (keyword and vector search) using a mathematical formula:
+            </p>
+            <div class="code-block">
+                <code>RRF_score = Σ(1 / (k + rank_i))</code>
+            </div>
+            <ul>
+                <li><strong>Advantages:</strong> Fast, no additional model inference required, works well for combining different retrieval methods</li>
+                <li><strong>Use case:</strong> When you need efficient ranking without additional computational overhead</li>
+            </ul>
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="images/RRF_example.png" alt="RRF Example" style="max-width: 90%; border: 1px solid #ccc; border-radius: 8px;">
+                <p style="font-style: italic; color: #666; margin-top: 10px;">Example of Reciprocal Rank Fusion combining keyword and vector search results</p>
+            </div>
+            <h3>2. Neural Reranker Models</h3>
+            <p>
+                Neural rerankers use transformer-based models to score query-document pairs based on semantic relevance:
+            </p>
+            <ul>
+                <li><strong>Model Example:</strong> <a href="https://huggingface.co/Qwen/Qwen3-Reranker-4B" target="_blank" rel="noopener noreferrer">Qwen3-Reranker-4B</a> - A state-of-the-art reranking model</li>
+                <li><strong>Advantages:</strong> Higher accuracy, better semantic understanding, can capture complex query-document relationships</li>
+                <li><strong>Trade-offs:</strong> Higher computational cost, increased latency</li>
+                <li><strong>Use case:</strong> When maximum relevance accuracy is critical and computational resources allow</li>
+            </ul>
+            
+        </div>
+
+        <!-- Slide 7: RAG Fusion -->
+        <div class="slide">
+            <h1>RAG Fusion: Advanced Multi-Query Retrieval</h1>
+            
+            <h2>What is RAG Fusion?</h2>
+            <p>
+                <strong>RAG Fusion</strong> is an advanced retrieval technique that generates multiple query variations from a single user question, retrieves documents for each variation, and then fuses the results to provide more comprehensive and accurate information.
+            </p>
+            
+            <h2>Why RAG Fusion?</h2>
+            <div class="important">
+                <strong>Problem with Single Query RAG:</strong> A single query might miss relevant documents due to:
+                <ul style="margin-top: 10px;">
+                    <li>Different terminology or phrasing in documents</li>
+                    <li>Synonyms and alternative expressions</li>
+                    <li>Context-dependent language variations</li>
+                    <li>Domain-specific vocabulary</li>
+                </ul>
+            </div>
+            
+            <h2>RAG Fusion Process</h2>
+            <div class="diagram">
+                <img src="https://i.ytimg.com/vi/77qELPbNgxA/maxresdefault.jpg" alt="RAG Fusion Process Flow" style="max-width: 90%; height: auto; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); margin: 24px 0;">
+            </div>
+            <h3>Step-by-Step Process</h3>
+            <ol>
+                <li><strong>Query Generation:</strong> Use an LLM to generate multiple query variations from the original question</li>
+                <li><strong>Parallel Retrieval:</strong> Retrieve documents for each query variation using vector search</li>
+                <li><strong>Result Fusion:</strong> Combine and deduplicate results using Reciprocal Rank Fusion (RRF)</li>
+                <li><strong>Context Generation:</strong> Use the fused results to generate the final response</li>
+            </ol>
+            
+            <h2>Key Benefits</h2>
+            <ul>
+                <li><strong>Improved Recall:</strong> Captures more relevant documents through query diversity</li>
+                <li><strong>Better Coverage:</strong> Addresses different ways the same information might be expressed</li>
+                <li><strong>Reduced Bias:</strong> Less dependent on specific query phrasing</li>
+                <li><strong>Enhanced Accuracy:</strong> More comprehensive context leads to better responses</li>
+            </ul>
+            
+        </div>
+
+        <!-- Slide 8: Coreference Resolution for Multi-Turn Conversations -->
+        <div class="slide">
+            <h1>Coreference Resolution for Multi‑Turn Conversations</h1>
+            
+            <h2>Why It's Needed</h2>
+            <ul>
+                <li><strong>Pronouns and references:</strong> Users say "it", "that", "he/she", or "the law" without restating entities.</li>
+                <li><strong>Ellipsis and follow‑ups:</strong> Later turns omit details assumed from prior context ("and what about section 2?").</li>
+                <li><strong>Entity continuity:</strong> Keep track of which document, section, or party is being discussed across turns.</li>
+                <li><strong>Grounding for RAG:</strong> Accurate resolution improves retrieval queries and reduces hallucinations.</li>
+            </ul>
+            <div class="diagram">
+                <img src="https://i0.wp.com/spotintelligence.com/wp-content/uploads/2024/01/coreference-resolution-nlp-1024x576.webp?resize=1024%2C576&ssl=1" alt="Coreference Resolution Example" style="max-width: 90%; height: auto; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); margin: 24px 0;">
+            </div>
+            <h2>Problems It Solves</h2>
+            <ul>
+                <li><strong>Ambiguity:</strong> Disambiguates who/what pronouns refer to in the conversation history.</li>
+                <li><strong>Context drift:</strong> Prevents switching to the wrong entity when multiple are in scope.</li>
+                <li><strong>Under‑specified queries:</strong> Expands follow‑ups into explicit, retrievable queries.</li>
+                <li><strong>Answer faithfulness:</strong> Ensures responses cite the intended source passages.</li>
+            </ul>
+            <h2>How It Works in RAG</h2>
+            <ol>
+                <li><strong>Track dialogue state:</strong> Maintain entities (documents, sections, people) mentioned so far with IDs/metadata.</li>
+                <li><strong>Resolve references:</strong> Replace pronouns/ellipsis in the new user turn with their most likely antecedents.</li>
+                <li><strong>Form explicit query:</strong> Generate an expanded query that includes resolved entities and constraints.</li>
+                <li><strong>Retrieve and answer:</strong> Use the explicit query for retrieval; generate grounded answers with citations.</li>
+            </ol>
+
+
+            <div class="important">
+                <strong>Takeaway:</strong> Coreference resolution turns vague follow‑ups into precise retrieval queries, boosting recall, precision, and answer correctness in multi‑turn RAG.
+            </div>
+            
+            <div class="important">
+                <strong>Reading Material:</strong>
+                <ul style="margin-top: 10px;">
+                    <li><a href="https://explosion.ai/blog/coref" target="_blank" rel="noopener noreferrer">Coreference Resolution (Explosion.ai blog)</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Slide 9: Query Decomposition -->
+        <div class="slide">
+            <h1>Query Decomposition</h1>
+
+            <h2>Why It's Important</h2>
+            <p>
+                Many real‑world queries are <strong>composite</strong> and contain multiple distinct constraints. Decomposing a complex query into atomic sub‑queries improves retrieval coverage, reduces ambiguity, and enables modular reasoning and aggregation.
+            </p>
+
+            <h2>What It Solves</h2>
+            <ul>
+                <li><strong>Recall gaps:</strong> Single queries can miss documents; sub‑queries widen coverage.</li>
+                <li><strong>Ambiguity:</strong> Makes implicit criteria explicit and testable.</li>
+                <li><strong>Ranking noise:</strong> Filter‑then‑rank on sub‑results yields cleaner final sets.</li>
+                <li><strong>Compositional reasoning:</strong> Supports stepwise filtering, intersections, and trade‑off analysis.</li>
+            </ul>
+
+            <h2>Example: Composite Query</h2>
+            <div class="important">
+                <p style="margin-bottom: 10px;"><strong>Original query:</strong> “Find environmentally friendly electric cars with over 300 miles of range under $40,000.”</p>
+                <ul style="margin-top: 0;">
+                    <li>Cars that are <strong>electric</strong></li>
+                    <li>Cars that are <strong>environmentally friendly</strong></li>
+                    <li>Cars with <strong>&gt; 300 miles</strong> range</li>
+                    <li>Cars priced <strong>&lt; $40,000</strong></li>
+                </ul>
+            </div>
+
+            <h3>Decomposition → Retrieval Plan</h3>
+            <ol>
+                <li><strong>Generate sub‑queries:</strong>
+                    <ul>
+                        <li>Q1: electric cars</li>
+                        <li>Q2: environmentally friendly certifications/ratings</li>
+                        <li>Q3: cars with range &gt; 300 miles</li>
+                        <li>Q4: cars priced &lt; $40,000</li>
+                    </ul>
+                </li>
+                <li><strong>Retrieve per sub‑query</strong> (dense + sparse where helpful).</li>
+                <li><strong>Intersect/score</strong> candidates that satisfy all constraints.</li>
+                <li><strong>Summarize</strong> final set with evidence and trade‑offs.</li>
+            </ol>
+            <div class="important">
+                <strong>Reading Material:</strong>
+                <ul style="margin-top: 10px;">
+                    <li><a href="https://blog.epsilla.com/advanced-rag-optimization-boosting-answer-quality-on-complex-questions-through-query-decomposition-e9d836eaf0d5" target="_blank" rel="noopener noreferrer">Advanced RAG Optimization: Query Decomposition (Epsilla blog)</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Slide 10: Metadata Filtering -->
+        <div class="slide">
+            <h1>Metadata Filtering in RAG</h1>
+
+            <h2>Why Use Metadata Filters?</h2>
+            <ul>
+                <li><strong>Higher precision:</strong> Restrict retrieval to the right subset (e.g., law, year, jurisdiction).</li>
+                <li><strong>Lower latency & cost:</strong> Search fewer candidates; reduce context length.</li>
+                <li><strong>Policy & safety:</strong> Enforce access control, content type, and language constraints.</li>
+                <li><strong>Reduce noise:</strong> If the user asks about a specific document, use metadata (e.g., <code>file_name</code>/<code>title</code>/<code>doc_id</code>, <code>page</code>) to filter out irrelevant documents so they are not retrieved.</li>
+            </ul>
+
+            <h2>What It Solves</h2>
+            <ul>
+                <li><strong>Targeted queries:</strong> For example, “Summarize the content on page 5 of <em>Book1</em>.” Use filters like <code>title = "Book1"</code> AND <code>page = 5</code> to fetch the exact chunk.</li>
+            </ul>
+
+            <h2>Common Metadata Fields</h2>
+            <ul>
+                <li><strong>file_name</strong></li>
+                <li><strong>page</strong></li>
+                <li><strong>author</strong></li>
+                <li><strong>doc_type</strong></li>
+                <li>title</li>
+                <li>section</li>
+                <li>language</li>
+                <li>created_at / updated_at / version</li>
+            </ul>
+
+            <h2>Pipeline Integration</h2>
+            <ol>
+                <li><strong>Document processing:</strong> Extract metadata (title, page, section, doc_type, language, dates) per chunk and store alongside embeddings in Elasticsearch.</li>
+                <li><strong>LLM parameterization:</strong> Let the LLM parse the user request to pick index, filters, and fields for Elasticsearch retrieval.</li>
+                <li><strong>Retrieve → rerank:</strong> Apply filters during kNN/BM25, then rerank with RRF or a neural reranker.</li>
+            </ol>
+
+            <div class="code-block">
+                <pre><code>User: Summarize page 5 of Book1
+LLM → filters: { "title": "Book1", "page": 5 }
+ES kNN: {
+  "field": "embedding",
+  "k": 20,
+  "num_candidates": 400,
+  "filter": {
+    "bool": { "must": [
+      { "term": { "title": "Book1" } },
+      { "term": { "page": 5 } }
+    ]}
+  }
+}</code></pre>
+            </div>
+
+            <h2>Elasticsearch Examples</h2>
+            <h3>Vector kNN with filter</h3>
+            <div class="code-block">
+                <pre><code>{
+  "field": "embedding",
+  "query_vector": [/* ... query embedding ... */],
+  "k": 50,
+  "num_candidates": 1000,
+  "filter": {
+    "bool": {
+      "must": [
+        { "term": { "doc_type": "law" } },
+        { "term": { "language": "zh" } },
+        { "range": { "year": { "gte": 2018 } } }
+      ]
+    }
+  }
+}</code></pre>
+            </div>
+
+            <h3>Hybrid (BM25 + vector) with shared filters</h3>
+            <div class="code-block">
+                <pre><code>{
+  "query": {
+    "bool": {
+      "must": { "multi_match": { "query": "sentencing standards for voluntary surrender", "fields": ["text", "title^2"], "type": "best_fields" } },
+      "filter": [
+        { "term": { "jurisdiction": "CN" } },
+        { "term": { "doc_type": "criminal_procedure" } }
+      ]
+    }
+  },
+  "knn": {
+    "field": "embedding",
+    "query_vector": [/* ... */],
+    "k": 50,
+    "num_candidates": 1000,
+    "filter": { "term": { "jurisdiction": "CN" } }
+  }
+}</code></pre>
+            </div>
+
+            <h2>Best Practices</h2>
+            <ul>
+                <li><strong>Index design:</strong> Map filter fields as keyword/date/numeric; avoid analyzed text.</li>
+                <li><strong>Pre-filter, then rerank:</strong> Apply filters before retrieval; use RRF or neural rerankers after.</li>
+                <li><strong>Strict vs soft:</strong> Encode hard constraints as filters; soft preferences as scores.</li>
+                <li><strong>Log & eval:</strong> Track filter hit-rates and false negatives.</li>
+            </ul>
+        </div>
+
+        <!-- Slide 11: Web Search as RAG -->
+        <div class="slide">
+            <h1>Web Search as Retrieval‑Augmented Generation</h1>
+
+            <h2>Why Web Search ≈ Retrieval</h2>
+            <p>
+                Calling a <strong>web search API</strong> to gather information online is itself a form of <strong>retrieval</strong>. The search results (pages, snippets, metadata) act as the external knowledge base that grounds the LLM’s answer.
+            </p>
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="https://www.elastic.co/search-labs/_next/image?url=https%3A%2F%2Fcdn.sanity.io%2Fimages%2Fme0ej585%2Fsearch-labs-import-testing%2F041725d7399658012a41719e1660072fb2b2e608-1260x725.png&w=3840&q=75" alt="Web Search as RAG Illustration" style="max-width: 80%; border: 1px solid #ccc; border-radius: 8px;">
+            </div>
+            <h2>How It Fits Into RAG</h2>
+            <ol>
+                <li><strong>Formulate query:</strong> Turn the user request into a precise search query (or multiple queries).</li>
+                <li><strong>Retrieve:</strong> Call web search APIs (e.g., Google, Bing, Tavily, Exa) to fetch top results.</li>
+                <li><strong>Extract:</strong> Fetch pages, strip boilerplate, and collect key passages with URLs and timestamps.</li>
+                <li><strong>Ground and generate:</strong> Provide the extracted snippets to the LLM to produce a cited, up‑to‑date answer.</li>
+            </ol>
+
+            <h2>Why It’s Important</h2>
+            <ul>
+                <li><strong>Freshness:</strong> Accesses the latest information beyond the model’s training cutoff.</li>
+                <li><strong>Coverage:</strong> Reaches sources not present in your private corpus or vector store.</li>
+                <li><strong>Attribution:</strong> Produces answers with live URLs for verification and trust.</li>
+                <li><strong>Breadth → Depth:</strong> Web results seed deeper retrieval into specific sites or documents.</li>
+            </ul>
+
+            <h2>Problems It Solves</h2>
+            <ul>
+                <li><strong>Outdated knowledge:</strong> Bridges gaps caused by model cutoff or stale indices.</li>
+                <li><strong>Long‑tail queries:</strong> Handles niche or emerging topics without prior embeddings.</li>
+                <li><strong>Source discovery:</strong> Finds authoritative sources to ingest into your RAG pipeline.</li>
+                <li><strong>Verification:</strong> Enables cross‑checking facts across multiple independent sources.</li>
+            </ul>
+
+        </div>
+
+        <!-- Slide 12: Image and Table Retrieval -->
+        <div class="slide">
+            <h1>Image and Table Retrieval</h1>
+
+            <h2>Image Retrieval Pipeline</h2>
+            <ol>
+                <li><strong>Extract images:</strong> Parse documents (PDF/HTML) and export embedded images with page and figure metadata.</li>
+                <li><strong>Describe images (multimodal):</strong> Use a multimodal model to generate concise, factual captions and keywords.</li>
+                <li><strong>Context augmentation:</strong> Enrich the caption using nearby context (figure captions, surrounding paragraphs, section headers, document metadata) to produce a <em>context‑aware</em> description.</li>
+                <li><strong>Index descriptions:</strong> Store captions and tags in Elasticsearch with image URLs/bytes and metadata for retrieval.</li>
+                <li><strong>Retrieve and ground:</strong> At query time, search textual descriptions to surface relevant images with citations.</li>
+            </ol>
+            <div class="important">
+                <strong>Example:</strong> A raw multimodal caption might be “portrait of a man.” With context augmentation (book title, chapter, caption), it becomes “portrait of <em>[person name]</em> from <em>[book]</em>, Chapter 3,” leading to more accurate and relevant retrieval.
+            </div>
+            <div class="diagram">
+                <img src="images/image_context_example.png" alt="Example showing how context transforms basic image descriptions into meaningful, retrievable content" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); margin: 20px 0;">
+            </div>
+
+            <h2>Table Retrieval Pipeline</h2>
+            <ol>
+                <li><strong>Extract tables:</strong> Detect and export tables from PDFs/HTML; normalize cell contents.</li>
+                <li><strong>Convert to Markdown:</strong> Represent table structure in Markdown to keep headers, rows, and relations.</li>
+                <li><strong>Context augmentation:</strong> Fuse surrounding headings, paragraph context, units/footnotes, and timeframe/source notes to create a <em>context‑aware</em> table description.</li>
+                <li><strong>Summarize with LLM:</strong> Create a text description capturing schema, key metrics, and trends.</li>
+                <li><strong>Index summaries:</strong> Store Markdown + summary in Elasticsearch with source metadata.</li>
+            </ol>
+
+
+
+            <h2>Why It Matters</h2>
+            <ul>
+                <li><strong>Broader coverage:</strong> Brings non‑textual evidence (figures, charts, tables) into RAG.</li>
+                <li><strong>Better answers:</strong> Enables citing visual evidence and numeric facts, not just prose.</li>
+                <li><strong>Structured retrieval:</strong> Table Markdown and summaries are highly retrievable and quotable.</li>
+            </ul>
+
+            <div class="important">
+                <strong>The Power of Context Augmentation:</strong> Context is fundamental to understanding in NLP and AI systems. Raw content (like "portrait of a man" or a standalone table) lacks the semantic richness needed for accurate retrieval. Context augmentation transforms isolated data into meaningful, searchable content by incorporating surrounding information—document titles, section headers, captions, and metadata. This mirrors how humans understand information: we don't process text or images in isolation, but within their broader context. In RAG systems, context-aware descriptions dramatically improve retrieval precision, reduce ambiguity, and enable more relevant, trustworthy responses by preserving the original semantic relationships and provenance.
+            </div>
+        </div>
+
+        <!-- Slide 13: Homework -->
+        <div class="slide">
+            <h1>Homework</h1>
+
+            <h2>Assignment</h2>
+            <p>
+                Build your own RAG system that can process any PDF document, including extracting and handling <strong>text</strong>, <strong>images</strong>, and <strong>tables</strong> in the file.
+            </p>
+
+            <h2>Minimum Requirements</h2>
+            <ul>
+                <li>Deploy Elasticsearch locally.</li>
+                <li>PDF ingestion: extract text, images, and tables.</li>
+                <li>Chunking: split text and table content into retrievable units; caption images with concise descriptions.</li>
+                <li>Embeddings: generate vectors for text, table summaries, and image captions.</li>
+                <li>Indexing: store content + embeddings in Elasticsearch.</li>
+                <li>Retrieval: support hybrid search (BM25 + vector).</li>
+                <li>Reranking: apply RRF or a neural reranker for final ordering.</li>
+                <li>Answering: generate responses grounded in retrieved content with citations.</li>
+            </ul>
+
+            <h2>Stretch Goals (Optional)</h2>
+            <ul>
+                <li>RAG Fusion: multi‑query generation and fusion.</li>
+                <li>Coreference resolution for multi‑turn questions.</li>
+                <li>Evaluation: track precision/recall and latency; add guardrails for safety.</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn">Previous</button>
+        <span class="slide-counter" id="slideCounter">1 / 13</span>
+        <button class="nav-btn" id="nextBtn">Next</button>
+    </div>
+    
+    <script>
+        class SlideManager {
+            constructor() {
+                this.slides = document.getElementsByClassName('slide');
+                this.totalSlides = this.slides.length;
+                this.currentSlideIndex = 0;
+                this.isTransitioning = false;
+                
+                this.init();
+            }
+            
+            init() {
+                // Hide all slides first
+                for (let i = 0; i < this.slides.length; i++) {
+                    this.slides[i].classList.remove('active');
+                }
+                
+                // Show first slide
+                this.showSlide(0);
+                this.updateNavigation();
+                
+                // Add event listeners
+                this.addEventListeners();
+            }
+            
+            showSlide(index) {
+                if (this.isTransitioning || index < 0 || index >= this.totalSlides) {
+                    return;
+                }
+                
+                this.isTransitioning = true;
+                
+                // Hide current slide
+                if (this.slides[this.currentSlideIndex]) {
+                    this.slides[this.currentSlideIndex].classList.remove('active');
+                }
+                
+                // Show new slide
+                this.currentSlideIndex = index;
+                this.slides[this.currentSlideIndex].classList.add('active');
+                
+                this.updateNavigation();
+                
+                // Reset transition lock
+                setTimeout(() => {
+                    this.isTransitioning = false;
+                }, 50);
+            }
+            
+            nextSlide() {
+                const nextIndex = (this.currentSlideIndex + 1) % this.totalSlides;
+                this.showSlide(nextIndex);
+            }
+            
+            prevSlide() {
+                const prevIndex = this.currentSlideIndex === 0 ? this.totalSlides - 1 : this.currentSlideIndex - 1;
+                this.showSlide(prevIndex);
+            }
+            
+            updateNavigation() {
+                const slideNumber = this.currentSlideIndex + 1;
+                document.getElementById('slideCounter').textContent = `${slideNumber} / ${this.totalSlides}`;
+                
+                // Enable/disable buttons based on position
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                
+                if (prevBtn) prevBtn.disabled = false;
+                if (nextBtn) nextBtn.disabled = false;
+            }
+            
+            addEventListeners() {
+                // Button navigation
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => this.prevSlide());
+                }
+                
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => this.nextSlide());
+                }
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'ArrowLeft') {
+                        event.preventDefault();
+                        this.prevSlide();
+                    } else if (event.key === 'ArrowRight') {
+                        event.preventDefault();
+                        this.nextSlide();
+                    }
+                });
+                
+                // Touch/swipe support for mobile
+                let touchStartX = 0;
+                let touchEndX = 0;
+                
+                document.addEventListener('touchstart', (event) => {
+                    touchStartX = event.changedTouches[0].screenX;
+                });
+                
+                document.addEventListener('touchend', (event) => {
+                    touchEndX = event.changedTouches[0].screenX;
+                    this.handleSwipe();
+                });
+                
+                this.handleSwipe = () => {
+                    const swipeThreshold = 50;
+                    const diff = touchStartX - touchEndX;
+                    
+                    if (Math.abs(diff) > swipeThreshold) {
+                        if (diff > 0) {
+                            this.nextSlide();
+                        } else {
+                            this.prevSlide();
+                        }
+                    }
+                };
+            }
+        }
+        
+        // Initialize slide manager when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new SlideManager();
+        });
+    </script>
+</body>
+</html>
