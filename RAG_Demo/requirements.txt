@@ -4,5 +4,5 @@ requests
 pymupdf
 jieba
 python-dotenv
-langchain_community
 tiktoken
+langchain_community
