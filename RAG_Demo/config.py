@@ -2,7 +2,7 @@ from elasticsearch import Elasticsearch
 import time
 
 class ElasticConfig:
-    url='http://elastic:2braintest@localhost:9200'
+    url='http://elastic:veW4C5J1@localhost:9200'
     
     
 def get_es():

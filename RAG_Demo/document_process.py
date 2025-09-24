@@ -53,4 +53,4 @@ def num_tokens_from_string(string):
 
 
 if __name__ == '__main__':
-    process_pdf('test_index', '刑事诉讼法.pdf')
+    process_pdf('test_index_1', 'test_pdf/xingshisusongfa.pdf') # ValueError: File path 刑事诉讼法.pdf is not a valid file or url

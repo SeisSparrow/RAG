@@ -306,20 +306,20 @@ def query_decompositon(query):
 
 
 if __name__ == '__main__':
-    # query = '刑事诉讼法'
-    # result_doc = elastic_search(query, 'test_index')
+    query = '刑事诉讼法'
+    result_doc = elastic_search(query, 'test_index_1')
 
-    # print("=== Initial Retrieval Results ===")
-    # for idx, doc in enumerate(result_doc, 1):
-    #     print(f"   Text: {doc['text'][:100]}{'...' if len(doc['text']) > 100 else ''}")
+    print("=== Initial Retrieval Results ===")
+    for idx, doc in enumerate(result_doc, 1):
+        print(f"   Text: {doc['text'][:100]}{'...' if len(doc['text']) > 100 else ''}")
 
 
-    # reranked_results = rerank(query, result_doc)
-    # print("\n=== Reranked Results ===")
-    # for idx, doc in enumerate(reranked_results, 1):
-    #     print(f"   Text: {doc['text'][:100]}{'...' if len(doc['text']) > 100 else ''}")
-    #     print(f"   Rerank Score: {doc.get('score', '-')}")
-    #     print("-" * 60)
+    reranked_results = rerank(query, result_doc)
+    print("\n=== Reranked Results ===")
+    for idx, doc in enumerate(reranked_results, 1):
+        print(f"   Text: {doc['text'][:100]}{'...' if len(doc['text']) > 100 else ''}")
+        print(f"   Rerank Score: {doc.get('score', '-')}")
+        print("-" * 60)
     
     
     # print(rag_fusion(query))

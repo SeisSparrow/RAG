@@ -48,5 +48,5 @@ def delete_elastic_index(index_name):
     print('[Delete Vector DB]' + index_name + ' deleted')
 
 if __name__ == '__main__':
-    create_elastic_index('test_index')
-    delete_elastic_index('test')
+    create_elastic_index('test_index_1')
+    # delete_elastic_index('test')
